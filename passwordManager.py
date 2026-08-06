@@ -3,7 +3,58 @@ import os
 from cryptography.fernet import Fernet
 import datetime as d
 import hashlib
+import secrets
+import string
+import pyperclip 
 
+def genera_password(lunghezza = 16):
+    lettere_minuscole = string.ascii_lowercase
+    lettere_maiuscole = string.ascii_uppercase
+    numeri = string.digits
+    simboli = "!@#$%^&*()_+-=[]{}|;:,.<>?"
+    tutti_i_caratteri = lettere_minuscole + lettere_maiuscole +simboli + numeri
+    password = [secrets.choice(lettere_minuscole),secrets.choice(lettere_maiuscole),secrets.choice(simboli),secrets.choice(numeri)]
+    password += [secrets.choice(tutti_i_caratteri) for _ in range(lunghezza-4)]
+    secrets.SystemRandom().shuffle(password)
+
+    return "".join(password)
+
+
+
+def selectDateRange(date1,date2,chiave):
+    with open("passwords.csv", "r") as infile:
+        reader = csv.DictReader(infile, delimiter=",")
+        found = False
+        
+        # Converti le date di input in datetime per il confronto
+        # Se date2 è None, cerca solo la data esatta date1
+        date1_obj = date1
+        date2_obj = date2
+        
+        for entry in reader:
+            try:
+                # Converti la data del CSV da stringa a datetime
+                entry_date = d.datetime.strptime(entry["Data"], "%d/%m/%Y")
+                
+                if date2_obj is None:
+                    # Cerca solo la data esatta
+                    if entry_date == date1_obj:
+                        print(entry["Nome_Utente"], decrypt_message(entry["Password"], chiave), entry["Data"])
+                        found = True
+                else:
+                    # Cerca nel range di date
+                    if date1_obj <= entry_date <= date2_obj:
+                        print(entry["Nome_Utente"], decrypt_message(entry["Password"], chiave), entry["Data"])
+                        found = True
+            except ValueError as e:
+                print(f"Errore nel parsing della data: {entry['Data']}")
+                continue
+                
+        if not found:
+            if date2_obj is None:
+                print(f"Non ho trovato nulla in data {date1_obj.strftime('%d/%m/%Y')}")
+            else:
+                print(f"Non ho trovato nulla nel range {date1_obj.strftime('%d/%m/%Y')} - {date2_obj.strftime('%d/%m/%Y')}")
 
 def chooseMasterPassword():
     while True:
@@ -123,7 +174,7 @@ def main():
             return
         while True:
             print("Scegliere l'operazione desiderata:")
-            print("E: esci, A: aggiungi password, V: visualizza password:, U: visualizza passowrd per username")
+            print("E: esci, A: aggiungi password, V: visualizza password:, U: visualizza passowrd per username, D: visualizza in range di date, G: generare password")
             selezione = input("")
             selezione = selezione.lower()
             if selezione == "e":
@@ -132,13 +183,36 @@ def main():
                 aggiungiPassword(chiave)
             elif selezione == "v":
                 visualizzaPassword(chiave)
+            elif selezione == "d":
+                f1 = "%d/%m/%Y"
+                
+                date1_str = input("Inserire data 1 (formato: gg/mm/aaaa):\n")
+                date1 = d.datetime.strptime(date1_str, f1)
+                
+                date2_str = input("Inserire data 2 (premi invio per cercare solo la data 1):\n")
+                
+                if date2_str.strip() == "":
+                    # Se non viene inserita la seconda data, cerca solo la prima data
+                    date2 = None
+                    print(f"Cerco solo le password in data {date1_str}")
+                else:
+                    date2 = d.datetime.strptime(date2_str, f1)
+                
+                selectDateRange(date1, date2, chiave)
+                selectDateRange(date1,date2,chiave)
             elif selezione == "u":
                 username = input("Inserire username desiderato: ")
                 username = username.lower()
                 selezionaPassword(username,chiave)
+            elif selezione == "g":
+                nuova_psw = genera_password()
+                pyperclip.copy(nuova_psw)
+                print("Password copiata nella clipboard")
             else:
                 print("Selezione non valida")
+            
     else:
         print("Accesso Negato")
 
-main()
+if __name__ == "__main__":
+    main()

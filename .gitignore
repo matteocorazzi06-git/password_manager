@@ -6,3 +6,4 @@ masterpassword.key
 # File temporanei di Python
 __pycache__/
 *.pyc
+.DS_Store
