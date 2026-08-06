@@ -129,6 +129,28 @@ def selezionaPassword(username,chiave):
         if not found:
             print("Non ho trovato questo username")
 
+def modificaPassword(username,chiave):
+    righe = []
+    trovato = False
+
+    with open("passwords.csv","r")as infile:
+        reader = csv.DictReader(infile)
+        for entry in reader:
+            if entry["Nome_Utente"].lower() == username.lower():
+                trovato = True
+                nuova_password = input(f"Inserisci la nuova password per {entry['Nome_Utente']}")
+                entry["Password"] = encrypt_message(nuova_password,chiave).decode()
+                entry["Data"] = curr_date()
+                print("Password aggiornata correttamente")
+            righe.append(entry)
+    if not trovato:
+        print("Username non trovato.")
+        return
+    with open("passwords.csv","w") as outfile:
+        fieldnames = ["Nome_Utente","Password","Data"]
+        writer = csv.DictWriter(outfile,fieldnames = fieldnames)
+        writer.writeheader()
+        writer.writerows(righe)
 
 def encrypt_message(message,chiave):
     f = Fernet(chiave)
@@ -174,7 +196,7 @@ def main():
             return
         while True:
             print("Scegliere l'operazione desiderata:")
-            print("E: esci, A: aggiungi password, V: visualizza password:, U: visualizza passowrd per username, D: visualizza in range di date, G: generare password")
+            print("E: esci, A: aggiungi password, V: visualizza password:, U: visualizza passowrd per username, D: visualizza in range di date, M: modifica password,G: generare password")
             selezione = input("")
             selezione = selezione.lower()
             if selezione == "e":
@@ -199,7 +221,6 @@ def main():
                     date2 = d.datetime.strptime(date2_str, f1)
                 
                 selectDateRange(date1, date2, chiave)
-                selectDateRange(date1,date2,chiave)
             elif selezione == "u":
                 username = input("Inserire username desiderato: ")
                 username = username.lower()
@@ -208,6 +229,9 @@ def main():
                 nuova_psw = genera_password()
                 pyperclip.copy(nuova_psw)
                 print("Password copiata nella clipboard")
+            elif selezione == "m":
+                username = input("Selezionare lo username per cui modificare password:")
+                modificaPassword(username, chiave)
             else:
                 print("Selezione non valida")
             
