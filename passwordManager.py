@@ -152,6 +152,27 @@ def modificaPassword(username,chiave):
         writer.writeheader()
         writer.writerows(righe)
 
+def eliminaPassword(username):
+    righe = []
+    trovato = False
+
+    with open("passwords.csv","r")as infile:
+        reader = csv.DictReader(infile)
+        for entry in reader:
+            if entry["Nome_Utente"].lower() == username.lower():
+                trovato = True 
+            else:
+                righe.append(entry)
+            
+    if not trovato:
+        print("Username non trovato.")
+        return
+    with open("passwords.csv","w") as outfile:
+        fieldnames = ["Nome_Utente","Password","Data"]
+        writer = csv.DictWriter(outfile,fieldnames = fieldnames)
+        writer.writeheader()
+        writer.writerows(righe)        
+
 def encrypt_message(message,chiave):
     f = Fernet(chiave)
     messaggio_cifrato = f.encrypt(message.encode())
@@ -196,7 +217,7 @@ def main():
             return
         while True:
             print("Scegliere l'operazione desiderata:")
-            print("E: esci, A: aggiungi password, V: visualizza password:, U: visualizza passowrd per username, D: visualizza in range di date, M: modifica password,G: generare password")
+            print("E: esci, A: aggiungi password, V: visualizza password:, U: visualizzare passowrd per username, D: visualizza in range di date, M: modificare password,G: generare password,X: eliminare password")
             selezione = input("")
             selezione = selezione.lower()
             if selezione == "e":
@@ -229,6 +250,9 @@ def main():
                 nuova_psw = genera_password()
                 pyperclip.copy(nuova_psw)
                 print("Password copiata nella clipboard")
+            elif selezione == "x":
+                nome_utente = input("Inserire nome utente per cui rimouvere password:")
+                eliminaPassword(nome_utente)
             elif selezione == "m":
                 username = input("Selezionare lo username per cui modificare password:")
                 modificaPassword(username, chiave)
