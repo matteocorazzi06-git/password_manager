@@ -19,9 +19,19 @@ def genera_password(lunghezza = 16):
 
     return "".join(password)
 
-
+def correctDate(string):
+    formato = "%d/%m/%Y"
+    try:
+        d.datetime.strptime(string, formato)
+        return True
+    except ValueError:
+        print("La stringa non è una data valida.")
+        return False 
 
 def selectDateRange(date1,date2,chiave):
+    if date2<date1:
+        print("Intervallo di date al contrario")
+        return 
     with open("passwords.csv", "r") as infile:
         reader = csv.DictReader(infile, delimiter=",")
         found = False
@@ -227,21 +237,26 @@ def main():
             elif selezione == "v":
                 visualizzaPassword(chiave)
             elif selezione == "d":
-                f1 = "%d/%m/%Y"
-                
-                date1_str = input("Inserire data 1 (formato: gg/mm/aaaa):\n")
-                date1 = d.datetime.strptime(date1_str, f1)
-                
-                date2_str = input("Inserire data 2 (premi invio per cercare solo la data 1):\n")
-                
-                if date2_str.strip() == "":
-                    # Se non viene inserita la seconda data, cerca solo la prima data
-                    date2 = None
-                    print(f"Cerco solo le password in data {date1_str}")
-                else:
-                    date2 = d.datetime.strptime(date2_str, f1)
-                
-                selectDateRange(date1, date2, chiave)
+                while True:
+                    f1 = "%d/%m/%Y"
+                    date1_str = input("Inserire data 1 (formato: gg/mm/aaaa):\n")
+                    if not correctDate(date1_str):
+                        print("Data errata")
+                        continue 
+                    date1 = d.datetime.strptime(date1_str, f1)
+                    date2_str = input("Inserire data 2 (premi invio per cercare solo la data 1):\n")
+                    if not correctDate(date2_str):
+                        print("Data errata")
+                        continue 
+                    if date2_str.strip() == "":
+                        date2 = None
+                        print(f"Cerco solo le password in data {date1_str}")
+                    else:
+                        date2 = d.datetime.strptime(date2_str, f1)
+                    
+                    selectDateRange(date1, date2, chiave)
+                    break 
+
             elif selezione == "u":
                 username = input("Inserire username desiderato: ")
                 username = username.lower()
