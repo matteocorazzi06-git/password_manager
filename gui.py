@@ -7,19 +7,111 @@ import database as db
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
+class dashBoardWindow(ctk.CTk):
+    def __init__(self,key):
+        super().__init__()
+        self.key = key
+        self.geometry("600x600")
+        self.title("Dashboard")
+
+        self.title_label = ctk.CTkLabel(
+            self, text = "Your passwords", font = ("Arial",20,"bold")
+        )
+
+        self.title_label.pack(pady = 10)
+
+        self.scrollable_frame = ctk.CTkScrollableFrame(
+            self, width = 550, height = 280
+        )
+
+        self.scrollable_frame.pack(pady = 10, padx = 10)
+
+        self.load_passwords()
+
+
+    def load_passwords(self):
+            for widget in self.scrollable_frame.winfo_children():
+                widget.destroy()
+
+            passwords = db.get_all_passwords(self.key)
+
+            if not passwords:
+                no_data_label = ctk.CTkLabel(
+                    self.scrollable_frame, text="No passwords saved yet"
+                )
+                no_data_label.grid(row=0, column=0, columnspan=3, pady=20)
+                return 
+
+            self.scrollable_frame.grid_columnconfigure(0, weight=2)
+            self.scrollable_frame.grid_columnconfigure(1, weight=3)
+            self.scrollable_frame.grid_columnconfigure(2, weight=1)
+
+            ctk.CTkLabel(
+                self.scrollable_frame, text="Username", font=("Arial", 12, "bold"), anchor="w"
+            ).grid(row=0, column=0, padx=10, pady=(5, 10), sticky="ew")
+
+            ctk.CTkLabel(
+                self.scrollable_frame, text="Password", font=("Arial", 12, "bold"), anchor="w"
+            ).grid(row=0, column=1, padx=10, pady=(5, 10), sticky="ew")
+
+            ctk.CTkLabel(
+                self.scrollable_frame, text="Date", font=("Arial", 12, "bold"), anchor="center"
+            ).grid(row=0, column=2, padx=10, pady=(5, 10), sticky="ew")
+
+            for idx, item in enumerate(passwords, start=1):
+                # Colonna 0: Username
+                ctk.CTkLabel(
+                    self.scrollable_frame, text=item["username"], anchor="w"
+                ).grid(row=idx, column=0, padx=10, pady=5, sticky="ew")
+
+                # Colonna 1: Password 
+                pwd_entry = ctk.CTkEntry(self.scrollable_frame, show="*")
+                pwd_entry.insert(0, item["password"])
+                pwd_entry.configure(state="readonly")
+                pwd_entry.grid(row=idx, column=1, padx=10, pady=5, sticky="ew")
+
+                # Colonna 2: Data
+                ctk.CTkLabel(
+                    self.scrollable_frame, text=item["date"], anchor="center"
+                ).grid(row=idx, column=2, padx=10, pady=5, sticky="ew")
+
+            for item in passwords:
+                row_frame = ctk.CTkFrame(self.scrollable_frame)
+                row_frame.pack(fill="x", pady=2, padx=5)
+                row_frame.grid_columnconfigure(0, weight=2)
+                row_frame.grid_columnconfigure(1, weight=2)
+                row_frame.grid_columnconfigure(2, weight=1)
+
+                # Colonna 0: Username
+                ctk.CTkLabel(row_frame, text=item["username"]).grid(
+                    row=0, column=0, padx=10, pady=8, sticky="ew"
+                )
+
+                # Colonna 1: Password 
+                pwd_entry = ctk.CTkEntry(row_frame, show="*")
+                pwd_entry.insert(0, item["password"])
+                pwd_entry.configure(state="readonly")
+                pwd_entry.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
+
+                # Colonna 2: Data
+                ctk.CTkLabel(row_frame, text=item["date"],anchor = "center").grid(
+                    row=0, column=2, padx=10, pady=5, sticky="ew"
+                )
+
+
+
+
 class loginWindow(ctk.CTk):
 
     def __init__(self):
         super().__init__()
 
-        # window
         self.title("Password manager - Login")
         self.geometry("400x300")
 
         db.initialize_db()
         self.encrypted_master = self.manage_master_password()
 
-        #widget
         self.title_label = ctk.CTkLabel(
             self,
             text = "Insert Password",
@@ -81,8 +173,10 @@ class loginWindow(ctk.CTk):
             self.entry_password.delete(0, "end")
 
     def open_main_dashboard(self, key):
-            self.destroy()
+            self.withdraw()
             print(f"Access granted")
+            dashboard = dashBoardWindow(key)
+            dashboard.mainloop()
 if __name__ == "__main__":
     app = loginWindow()
     app.mainloop()
