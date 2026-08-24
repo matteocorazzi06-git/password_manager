@@ -3,6 +3,7 @@ import os
 import customtkinter as ctk
 from crypto_utils import handle_key
 import database as db
+import pyperclip
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
@@ -11,7 +12,7 @@ class dashBoardWindow(ctk.CTk):
     def __init__(self,key):
         super().__init__()
         self.key = key
-        self.geometry("600x600")
+        self.geometry("700x700")
         self.title("Dashboard")
 
         self.title_label = ctk.CTkLabel(
@@ -44,7 +45,9 @@ class dashBoardWindow(ctk.CTk):
 
             self.scrollable_frame.grid_columnconfigure(0, weight=2)
             self.scrollable_frame.grid_columnconfigure(1, weight=3)
-            self.scrollable_frame.grid_columnconfigure(2, weight=1)
+            self.scrollable_frame.grid_columnconfigure(2, weight=0)
+            self.scrollable_frame.grid_columnconfigure(3, weight=0)
+            self.scrollable_frame.grid_columnconfigure(4, weight=1)
 
             ctk.CTkLabel(
                 self.scrollable_frame, text="Username", font=("Arial", 12, "bold"), anchor="w"
@@ -56,7 +59,7 @@ class dashBoardWindow(ctk.CTk):
 
             ctk.CTkLabel(
                 self.scrollable_frame, text="Date", font=("Arial", 12, "bold"), anchor="center"
-            ).grid(row=0, column=2, padx=10, pady=(5, 10), sticky="ew")
+            ).grid(row=0, column=4, padx=10, pady=(5, 10), sticky="ew")
 
             for idx, item in enumerate(passwords, start=1):
                 # Colonna 0: Username
@@ -73,32 +76,38 @@ class dashBoardWindow(ctk.CTk):
                 # Colonna 2: Data
                 ctk.CTkLabel(
                     self.scrollable_frame, text=item["date"], anchor="center"
-                ).grid(row=idx, column=2, padx=10, pady=5, sticky="ew")
+                ).grid(row=idx, column=4, padx=10, pady=5, sticky="ew")
 
-            for item in passwords:
-                row_frame = ctk.CTkFrame(self.scrollable_frame)
-                row_frame.pack(fill="x", pady=2, padx=5)
-                row_frame.grid_columnconfigure(0, weight=2)
-                row_frame.grid_columnconfigure(1, weight=2)
-                row_frame.grid_columnconfigure(2, weight=1)
+                btn_toggle = ctk.CTkButton(
+                    self.scrollable_frame, text = "👁️", width = 35,command = lambda p = pwd_entry: self.toggle_password(p)
 
-                # Colonna 0: Username
-                ctk.CTkLabel(row_frame, text=item["username"]).grid(
-                    row=0, column=0, padx=10, pady=8, sticky="ew"
                 )
+                btn_toggle.grid(row = idx, column = 2, padx = 2, pady = 5)
 
-                # Colonna 1: Password 
-                pwd_entry = ctk.CTkEntry(row_frame, show="*")
-                pwd_entry.insert(0, item["password"])
-                pwd_entry.configure(state="readonly")
-                pwd_entry.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
+                btn_clipboard = ctk.CTkButton(
+                    self.scrollable_frame, text = "📝", width = 35,command = lambda p = item["password"]: self.copy_to_clipboard(p)
 
-                # Colonna 2: Data
-                ctk.CTkLabel(row_frame, text=item["date"],anchor = "center").grid(
-                    row=0, column=2, padx=10, pady=5, sticky="ew"
                 )
+                btn_clipboard.grid(row = idx, column = 3, padx = 2, pady = 5)
 
+    def add_new_password(self):
+        user = self.entry_user.get().strip()
+        pwd = self.entry_pass.get().strip()
 
+        if user and pwd:
+            db.save_password(self.key, user, pwd)
+            self.entry_user.delete(0, "end")
+            self.entry_pass.delete(0, "end")
+            self.load_passwords()
+
+    def toggle_password(self,entry_widget):
+        if entry_widget.cget("show") == "*":
+            entry_widget.configure(show = "")
+        else:
+            entry_widget.configure(show = "*")
+
+    def copy_to_clipboard(self,password):
+        pyperclip.copy(password)
 
 
 class loginWindow(ctk.CTk):
