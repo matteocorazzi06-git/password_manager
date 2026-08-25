@@ -3,7 +3,6 @@ import datetime as dt
 import os
 from crypto_utils import decrypt_message, encrypt_message
 
-
 def get_current_date():
     today = dt.datetime.now()
     return f"{str(today.day).zfill(2)}/{str(today.month).zfill(2)}/{today.year}"

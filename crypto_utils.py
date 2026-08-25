@@ -5,7 +5,6 @@ import secrets
 import string
 from cryptography.fernet import Fernet
 
-
 def generate_password(length=16):
     lowercase = string.ascii_lowercase
     uppercase = string.ascii_uppercase

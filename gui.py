@@ -21,6 +21,27 @@ class dashBoardWindow(ctk.CTk):
 
         self.title_label.pack(pady = 10)
 
+        self.add_frame = ctk.CTkFrame(self)
+        self.add_frame.pack(pady=10, padx=20, fill="x")
+
+        self.entry_user = ctk.CTkEntry(
+            self.add_frame, placeholder_text="Username/Email", width=180
+        )
+        self.entry_user.pack(side="left", padx=5, pady=10, expand=True, fill="x")
+
+        self.entry_pass = ctk.CTkEntry(
+            self.add_frame, placeholder_text="Password", show="*", width=180
+        )
+        self.entry_pass.pack(side="left", padx=5, pady=10, expand=True, fill="x")
+
+        self.btn_add = ctk.CTkButton(
+            self.add_frame,
+            text="Add",
+            width=100,
+            command=self.handle_password,
+        )
+        self.btn_add.pack(side="left", padx=5, pady=10)
+
         self.scrollable_frame = ctk.CTkScrollableFrame(
             self, width = 550, height = 280
         )
@@ -90,15 +111,18 @@ class dashBoardWindow(ctk.CTk):
                 )
                 btn_clipboard.grid(row = idx, column = 3, padx = 2, pady = 5)
 
-    def add_new_password(self):
+    def handle_password(self):
+
         user = self.entry_user.get().strip()
         pwd = self.entry_pass.get().strip()
 
         if user and pwd:
-            db.save_password(self.key, user, pwd)
+            db.add_password(user,pwd,self.key)
+
             self.entry_user.delete(0, "end")
             self.entry_pass.delete(0, "end")
             self.load_passwords()
+
 
     def toggle_password(self,entry_widget):
         if entry_widget.cget("show") == "*":
@@ -108,6 +132,19 @@ class dashBoardWindow(ctk.CTk):
 
     def copy_to_clipboard(self,password):
         pyperclip.copy(password)
+
+
+    def add_new_password(self):
+        user = self.entry_user.get().strip()
+        pwd = self.entry_pass.get().strip()
+
+        if user and pwd:
+
+            db.add_password(self.key, user, pwd)
+
+            self.entry_user.delete(0, "end")
+            self.entry_pass.delete(0, "end")
+            self.load_passwords()
 
 
 class loginWindow(ctk.CTk):
@@ -169,7 +206,7 @@ class loginWindow(ctk.CTk):
                     text="Access granted", text_color="green"
                 )
                 self.after(
-                    1000, lambda: self.open_main_dashboard(key)
+                    300, lambda: self.open_main_dashboard(key)
                 )  
             else:
                 self.title_label.configure(
