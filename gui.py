@@ -1,7 +1,7 @@
 import hashlib
 import os
 import customtkinter as ctk
-from crypto_utils import handle_key
+from crypto_utils import handle_key,generate_password
 import database as db
 import pyperclip
 
@@ -41,6 +41,14 @@ class dashBoardWindow(ctk.CTk):
             command=self.handle_password,
         )
         self.btn_add.pack(side="left", padx=5, pady=10)
+        self.btn_generate = ctk.CTkButton(
+            self.add_frame, 
+            text = "Generate",
+            width = 100,
+            command=self.generate_secure_password,
+        )
+        self.btn_generate.pack(side = "left", padx = 5, pady = 10)
+
 
         self.scrollable_frame = ctk.CTkScrollableFrame(
             self, width = 550, height = 280
@@ -50,6 +58,11 @@ class dashBoardWindow(ctk.CTk):
 
         self.load_passwords()
 
+    def generate_secure_password(self):
+        password = generate_password()
+        self.copy_to_clipboard(password)
+        self.entry_pass.delete(0,'end')
+        self.entry_pass.insert(0,password)
 
     def load_passwords(self):
             for widget in self.scrollable_frame.winfo_children():
