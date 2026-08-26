@@ -12,7 +12,7 @@ class dashBoardWindow(ctk.CTk):
     def __init__(self,key):
         super().__init__()
         self.key = key
-        self.geometry("700x700")
+        self.geometry("800x800")
         self.title("Dashboard")
 
         self.title_label = ctk.CTkLabel(
@@ -69,6 +69,8 @@ class dashBoardWindow(ctk.CTk):
             self.scrollable_frame.grid_columnconfigure(2, weight=0)
             self.scrollable_frame.grid_columnconfigure(3, weight=0)
             self.scrollable_frame.grid_columnconfigure(4, weight=1)
+            self.scrollable_frame.grid_columnconfigure(5, weight=0)
+
 
             ctk.CTkLabel(
                 self.scrollable_frame, text="Username", font=("Arial", 12, "bold"), anchor="w"
@@ -110,6 +112,15 @@ class dashBoardWindow(ctk.CTk):
 
                 )
                 btn_clipboard.grid(row = idx, column = 3, padx = 2, pady = 5)
+
+                btn_delete = ctk.CTkButton(
+                    self.scrollable_frame, text = "❌", width = 35, command = lambda i = idx: self.delete_password_entry(i-1) 
+                )
+                btn_delete.grid(row = idx, column = 5, padx = 2, pady = 5)
+
+    def delete_password_entry(self,idx):
+        db.delete_password_index(idx)
+        self.load_passwords()
 
     def handle_password(self):
 

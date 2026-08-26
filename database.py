@@ -57,6 +57,7 @@ def get_all_passwords(key):
                     "date": entry["date"],
                 }
             )
+
     return results
 
 
@@ -106,6 +107,21 @@ def delete_password(username):
 
     return found
 
+def delete_password_index(target_index):
+    rows = []
+
+    with open("passwords.csv", "r") as infile:
+        reader = csv.DictReader(infile)
+        for (index,entry) in enumerate(reader):
+            if index != target_index:
+                rows.append(entry)
+
+    with open("passwords.csv", "w", newline="") as outfile:
+        writer = csv.DictWriter(
+            outfile, fieldnames=["username", "password", "date"]
+        )
+        writer.writeheader()
+        writer.writerows(rows)
 
 def get_passwords_by_date_range(start_date, end_date, key):
     results = []
