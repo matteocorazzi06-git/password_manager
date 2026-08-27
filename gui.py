@@ -4,6 +4,8 @@ import customtkinter as ctk
 from crypto_utils import handle_key,generate_password
 import database as db
 import pyperclip
+import time 
+import threading 
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
@@ -13,7 +15,8 @@ class dashBoardWindow(ctk.CTk):
         super().__init__()
         self.key = key
         self.geometry("800x800")
-        self.title("Dashboard")
+        self.title("Dashboard") 
+        self.clear_timer = None 
 
         self.title_label = ctk.CTkLabel(
             self, text = "Your passwords", font = ("Arial",20,"bold")
@@ -175,7 +178,18 @@ class dashBoardWindow(ctk.CTk):
 
     def copy_to_clipboard(self,password):
         pyperclip.copy(password)
+        print("La password sarà cancellata dalla clipboard tra 30 secondi dalla clipboard")
+        if self.clear_timer:
+            self.clear_timer.cancel()
+        self.clear_timer = threading.Timer(30, self.clear_clipboard)
+        self.clear_timer.daemon = True
+        self.clear_timer.start()
 
+    def clear_clipboard(self):
+        time.sleep(30)
+        pyperclip.copy("")
+        print("Cancellata dalla clipboard")
+        self.clear_timer = None
 
 class loginWindow(ctk.CTk):
 
