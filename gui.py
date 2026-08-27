@@ -24,6 +24,12 @@ class dashBoardWindow(ctk.CTk):
         self.add_frame = ctk.CTkFrame(self)
         self.add_frame.pack(pady=10, padx=20, fill="x")
 
+        self.entry_search = ctk.CTkEntry(
+            self, placeholder_text= "Search by username...🔎"
+        )
+        self.entry_search.pack(padx = 20, pady = (0,10), fill= "x")
+        self.entry_search.bind("<KeyRelease>", lambda event: self.load_passwords() )
+
         self.entry_user = ctk.CTkEntry(
             self.add_frame, placeholder_text="Username/Email", width=180
         )
@@ -72,9 +78,22 @@ class dashBoardWindow(ctk.CTk):
 
             passwords = db.get_all_passwords(self.key)
 
+            search_query = (
+                self.entry_search.get().strip().lower()
+                if hasattr(self,"entry_search")
+                else ""
+            )
+            if search_query:
+                passwords = [
+                    p
+                    for p in passwords
+                    if search_query in p["username"].lower()
+            ]
+            
+
             if not passwords:
                 no_data_label = ctk.CTkLabel(
-                    self.scrollable_frame, text="No passwords saved yet"
+                    self.scrollable_frame, text="No passwords to show"
                 )
                 no_data_label.grid(row=0, column=0, columnspan=3, pady=20)
                 return 
