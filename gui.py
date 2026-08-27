@@ -34,13 +34,8 @@ class dashBoardWindow(ctk.CTk):
         )
         self.entry_pass.pack(side="left", padx=5, pady=10, expand=True, fill="x")
 
-        self.btn_add = ctk.CTkButton(
-            self.add_frame,
-            text="Add",
-            width=100,
-            command=self.handle_password,
-        )
-        self.btn_add.pack(side="left", padx=5, pady=10)
+        self.entry_pass.bind("<Return>", lambda event: self.handle_password())
+
         self.btn_generate = ctk.CTkButton(
             self.add_frame, 
             text = "Generate",
@@ -49,6 +44,13 @@ class dashBoardWindow(ctk.CTk):
         )
         self.btn_generate.pack(side = "left", padx = 5, pady = 10)
 
+        self.btn_add = ctk.CTkButton(
+            self.add_frame,
+            text="Add",
+            width=100,
+            command=self.handle_password,
+        )
+        self.btn_add.pack(side="left", padx=5, pady=10)
 
         self.scrollable_frame = ctk.CTkScrollableFrame(
             self, width = 550, height = 280
@@ -103,13 +105,11 @@ class dashBoardWindow(ctk.CTk):
                     self.scrollable_frame, text=item["username"], anchor="w"
                 ).grid(row=idx, column=0, padx=10, pady=5, sticky="ew")
 
-                # Colonna 1: Password 
                 pwd_entry = ctk.CTkEntry(self.scrollable_frame, show="*")
                 pwd_entry.insert(0, item["password"])
                 pwd_entry.configure(state="readonly")
                 pwd_entry.grid(row=idx, column=1, padx=10, pady=5, sticky="ew")
 
-                # Colonna 2: Data
                 ctk.CTkLabel(
                     self.scrollable_frame, text=item["date"], anchor="center"
                 ).grid(row=idx, column=4, padx=10, pady=5, sticky="ew")
@@ -158,19 +158,6 @@ class dashBoardWindow(ctk.CTk):
         pyperclip.copy(password)
 
 
-    def add_new_password(self):
-        user = self.entry_user.get().strip()
-        pwd = self.entry_pass.get().strip()
-
-        if user and pwd:
-
-            db.add_password(self.key, user, pwd)
-
-            self.entry_user.delete(0, "end")
-            self.entry_pass.delete(0, "end")
-            self.load_passwords()
-
-
 class loginWindow(ctk.CTk):
 
     def __init__(self):
@@ -215,15 +202,13 @@ class loginWindow(ctk.CTk):
 
         if not self.encrypted_master:
             self.title_label.configure(
-                text="Errore: Master password non configurata.", text_color="red"
+                text="Error: master password is not configured", text_color="red"
             )
             return
 
-        # Verifica hash SHA-256
         hashed_input = hashlib.sha256(password_input.encode()).hexdigest()
 
         if hashed_input == self.encrypted_master:
-            # Sblocchiamo la chiave Fernet
             key = handle_key(password_input)
             if key is not None:
                 self.title_label.configure(
