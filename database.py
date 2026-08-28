@@ -61,28 +61,24 @@ def get_all_passwords(key):
     return results
 
 
-def update_password(username, new_password, key):
+def update_password(target_index, new_username, new_password, key):
     rows = []
-    found = False
-
+    target_index -=1
     with open("passwords.csv", "r") as infile:
         reader = csv.DictReader(infile)
-        for entry in reader:
-            if entry["username"].lower() == username.lower():
-                found = True
+        for idx,entry in enumerate(reader):
+            if idx == target_index:
+                entry["username"] = new_username
                 entry["password"] = encrypt_message(new_password, key).decode()
                 entry["date"] = get_current_date()
             rows.append(entry)
 
-    if found:
-        with open("passwords.csv", "w", newline="") as outfile:
-            writer = csv.DictWriter(
-                outfile, fieldnames=["username", "password", "date"]
-            )
-            writer.writeheader()
-            writer.writerows(rows)
-
-    return found
+    with open("passwords.csv", "w", newline="") as outfile:
+        writer = csv.DictWriter(
+            outfile, fieldnames=["username", "password", "date"]
+        )
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 def delete_password(username):

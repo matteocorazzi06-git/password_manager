@@ -94,19 +94,20 @@ class dashBoardWindow(ctk.CTk):
             ]
             
 
-            if not passwords:
-                no_data_label = ctk.CTkLabel(
-                    self.scrollable_frame, text="No passwords to show"
-                )
-                no_data_label.grid(row=0, column=0, columnspan=3, pady=20)
-                return 
-
             self.scrollable_frame.grid_columnconfigure(0, weight=2)
             self.scrollable_frame.grid_columnconfigure(1, weight=3)
             self.scrollable_frame.grid_columnconfigure(2, weight=0)
             self.scrollable_frame.grid_columnconfigure(3, weight=0)
             self.scrollable_frame.grid_columnconfigure(4, weight=1)
             self.scrollable_frame.grid_columnconfigure(5, weight=0)
+            self.scrollable_frame.grid_columnconfigure(6, weight=0)
+
+            if not passwords:
+                no_data_label = ctk.CTkLabel(
+                    self.scrollable_frame, text="No passwords to show", anchor = "center"
+                )
+                no_data_label.grid(row=0, column=0, columnspan=7, pady=20,sticky = "ew")
+                return 
 
 
             ctk.CTkLabel(
@@ -147,11 +148,41 @@ class dashBoardWindow(ctk.CTk):
 
                 )
                 btn_clipboard.grid(row = idx, column = 3, padx = 2, pady = 5)
+                btn_edit = ctk.CTkButton(
+                    self.scrollable_frame, text = "✏️", width = 35, command = lambda item = item, idx = idx: self.open_edit_dialog(item,idx)
+            
+                )
+                btn_edit.grid(row = idx,column = 5,padx = 2, pady = 5)
 
                 btn_delete = ctk.CTkButton(
                     self.scrollable_frame, text = "❌", width = 35, command = lambda i = idx: self.delete_password_entry(i-1) 
                 )
-                btn_delete.grid(row = idx, column = 5, padx = 2, pady = 5)
+                btn_delete.grid(row = idx, column = 6, padx = 2, pady = 5)
+    
+    def open_edit_dialog(self,item,idx):
+        edit_window = ctk.CTkToplevel(self)
+        edit_window.title("Modifica credenziali")
+        edit_window.geometry("350x250")
+        edit_window.grab_set()
+
+        ctk.CTkLabel(edit_window, text="Nuovo Username:").pack(pady=(15, 5))
+        entry_user = ctk.CTkEntry(edit_window, width=220)
+        entry_user.insert(0, item["username"])
+        entry_user.pack(pady=5)
+
+        ctk.CTkLabel(edit_window, text="Nuova Password:").pack(pady=(10, 5))
+        entry_pass = ctk.CTkEntry(edit_window, width=220)
+        entry_pass.insert(0, item["password"])
+        entry_pass.pack(pady=5)
+        def save_changes():
+            new_user = entry_user.get().strip()
+            new_pwd = entry_pass.get().strip()
+            if new_user and new_pwd:
+                db.update_password(idx, new_user, new_pwd, self.key)
+                edit_window.destroy()
+                self.load_passwords()
+        save = ctk.CTkButton(edit_window, text = "Save changes", command = save_changes)
+        save.pack(pady = 20)
 
     def delete_password_entry(self,idx):
         db.delete_password_index(idx)
