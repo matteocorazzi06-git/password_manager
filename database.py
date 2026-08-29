@@ -1,7 +1,14 @@
 import csv
 import datetime as dt
 import os
+import shutil
 from crypto_utils import decrypt_message, encrypt_message
+
+def export_csv_backup(destination_path):
+    if os.path.exists("passwords.csv"):
+        shutil.copy("passwords.csv",destination_path)
+        return True
+    return False 
 
 def get_current_date():
     today = dt.datetime.now()

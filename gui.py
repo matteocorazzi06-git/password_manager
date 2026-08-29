@@ -6,6 +6,7 @@ import database as db
 import pyperclip
 import time 
 import threading 
+from tkinter import filedialog 
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
@@ -14,7 +15,7 @@ class dashBoardWindow(ctk.CTk):
     def __init__(self,key):
         super().__init__()
         self.key = key
-        self.geometry("800x800")
+        self.geometry("900x850")
         self.title("Dashboard") 
         self.clear_timer = None 
 
@@ -24,13 +25,22 @@ class dashBoardWindow(ctk.CTk):
 
         self.title_label.pack(pady = 10)
 
+        self.export_btn = ctk.CTkButton(
+            self,
+            text = "💾 Export passwords",
+            fg_color="#2b5b84",
+            hover_color="#1e3d59",
+            command = self.export_backup,
+        )
+        self.export_btn.pack(pady = (0,10))
+
         self.add_frame = ctk.CTkFrame(self)
         self.add_frame.pack(pady=10, padx=20, fill="x")
 
         self.entry_search = ctk.CTkEntry(
             self, placeholder_text= "Search by username...🔎"
         )
-        self.entry_search.pack(padx = 20, pady = (0,10), fill= "x")
+        self.entry_search.pack(padx = 25, pady = (0,10), fill= "x")
         self.entry_search.bind("<KeyRelease>", lambda event: self.load_passwords() )
 
         self.entry_user = ctk.CTkEntry(
@@ -62,12 +72,23 @@ class dashBoardWindow(ctk.CTk):
         self.btn_add.pack(side="left", padx=5, pady=10)
 
         self.scrollable_frame = ctk.CTkScrollableFrame(
-            self, width = 550, height = 280
+            self, width = 750, height = 450
         )
 
-        self.scrollable_frame.pack(pady = 10, padx = 10)
+        self.scrollable_frame.pack(pady = 10, padx = 10,fill = "both",expand = True)
 
         self.load_passwords()
+    
+    def export_backup(self):
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes = [("CSV files","*.csv"),("All files","*.*")],
+            title = "Save CSV backup",
+            initialfile = "passwords_backup.csv",
+
+        )
+        if file_path:
+            db.export_csv_backup(file_path)
 
     def generate_secure_password(self):
         password = generate_password()
@@ -296,6 +317,7 @@ class loginWindow(ctk.CTk):
             print(f"Access granted")
             dashboard = dashBoardWindow(key)
             dashboard.mainloop()
+
 if __name__ == "__main__":
     app = loginWindow()
     app.mainloop()
