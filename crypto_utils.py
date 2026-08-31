@@ -4,6 +4,34 @@ import os
 import secrets
 import string
 from cryptography.fernet import Fernet
+import re
+
+def check_strength(password):
+    if not password:
+        return 0.0,"Gray",""
+
+    score = 0
+    if len(password) >= 8:
+        score += 1
+    if len(password) >= 16:
+        score+= 1
+    if re.search(r"[a-z]",password):
+        score+=1
+    if re.search(r"[A-Z]",password):
+        score+=1
+    if re.search(r"[!@#$%^&*(),.?\":{}|<>]",password):
+        score+=1    
+
+    fraction = score / 5
+
+    if score <= 2:
+            return fraction, "#e74c3c", "Weak 🔴"
+    elif score <= 4:
+        return fraction, "#f39c12", "Mediocre 🟡"
+    else:
+        return fraction, "#2ecc71", "Strong 🟢"
+
+
 
 def generate_password(length=16):
     lowercase = string.ascii_lowercase

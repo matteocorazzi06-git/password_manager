@@ -1,7 +1,7 @@
 import hashlib
 import os
 import customtkinter as ctk
-from crypto_utils import handle_key,generate_password
+from crypto_utils import handle_key,generate_password,check_strength
 import database as db
 import pyperclip
 import time 
@@ -37,12 +37,6 @@ class dashBoardWindow(ctk.CTk):
         self.add_frame = ctk.CTkFrame(self)
         self.add_frame.pack(pady=10, padx=20, fill="x")
 
-        self.entry_search = ctk.CTkEntry(
-            self, placeholder_text= "Search by username...🔎"
-        )
-        self.entry_search.pack(padx = 25, pady = (0,10), fill= "x")
-        self.entry_search.bind("<KeyRelease>", lambda event: self.load_passwords() )
-
         self.entry_user = ctk.CTkEntry(
             self.add_frame, placeholder_text="Username/Email", width=180
         )
@@ -71,6 +65,32 @@ class dashBoardWindow(ctk.CTk):
         )
         self.btn_add.pack(side="left", padx=5, pady=10)
 
+        self.security_frame = ctk.CTkFrame(
+            self, fg_color = "transparent"
+        )
+        self.security_frame.pack(pady = (0,10), padx = 25, fill = "x")
+
+        self.strength_bar = ctk.CTkProgressBar(
+            self.security_frame, height = 8, width = 200
+        )
+        self.strength_bar.set(0)
+        self.strength_bar.pack(side = "right",padx = (0,10))
+        
+        self.strength_label = ctk.CTkLabel(
+            self.security_frame, text = "" , font = ("Arial",11,"bold")
+        )
+        self.strength_label.pack(side = "left")
+
+        self.entry_pass.bind(
+            "<KeyRelease>",lambda event: self.update_strength_meter()
+        )     
+
+        self.entry_search = ctk.CTkEntry(
+            self, placeholder_text= "Search by username...🔎"
+        )
+        self.entry_search.pack(padx = 25, pady = (0,10), fill= "x")
+        self.entry_search.bind("<KeyRelease>", lambda event: self.load_passwords() )   
+
         self.scrollable_frame = ctk.CTkScrollableFrame(
             self, width = 750, height = 450
         )
@@ -78,7 +98,15 @@ class dashBoardWindow(ctk.CTk):
         self.scrollable_frame.pack(pady = 10, padx = 10,fill = "both",expand = True)
 
         self.load_passwords()
-    
+
+    def update_strength_meter(self):
+        pwd = self.entry_pass.get()
+        progress, color, text = check_strength(pwd)
+
+        self.strength_bar.set(progress)
+        self.strength_bar.configure(progress_color = color)
+        self.strength_label.configure(text = text, text_color = color)
+
     def export_backup(self):
         file_path = filedialog.asksaveasfilename(
             defaultextension=".csv",
@@ -95,6 +123,7 @@ class dashBoardWindow(ctk.CTk):
         self.copy_to_clipboard(password)
         self.entry_pass.delete(0,'end')
         self.entry_pass.insert(0,password)
+        self.update_strength_meter()
 
     def load_passwords(self):
             for widget in self.scrollable_frame.winfo_children():
