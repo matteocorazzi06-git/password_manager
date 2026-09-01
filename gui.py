@@ -44,7 +44,7 @@ class dashBoardWindow(ctk.CTk):
             self.add_frame, placeholder_text="Username/Email"
         )
         self.entry_user.grid(row=0, column=0, padx=5, pady=(10, 2), sticky="ew")
-
+        self.entry_user.bind("<Return>", lambda event: self.handle_password())
         self.entry_pass = ctk.CTkEntry(
             self.add_frame, placeholder_text="Password", show="*"
         )
@@ -125,6 +125,7 @@ class dashBoardWindow(ctk.CTk):
         self.copy_to_clipboard(password)
         self.entry_pass.delete(0,'end')
         self.entry_pass.insert(0,password)
+        self.entry_pass.configure(show = "*")
         self.update_strength_meter()
 
     def load_passwords(self):
@@ -252,6 +253,7 @@ class dashBoardWindow(ctk.CTk):
 
             self.entry_user.delete(0, "end")
             self.entry_pass.delete(0, "end")
+            self.update_strength_meter()
             self.load_passwords()
 
 
