@@ -37,16 +37,18 @@ class dashBoardWindow(ctk.CTk):
         self.add_frame = ctk.CTkFrame(self)
         self.add_frame.pack(pady=10, padx=20, fill="x")
 
+        self.add_frame.grid_columnconfigure(0, weight=1)
+        self.add_frame.grid_columnconfigure(1, weight=1)
+
         self.entry_user = ctk.CTkEntry(
-            self.add_frame, placeholder_text="Username/Email", width=180
+            self.add_frame, placeholder_text="Username/Email"
         )
-        self.entry_user.pack(side="left", padx=5, pady=10, expand=True, fill="x")
+        self.entry_user.grid(row=0, column=0, padx=5, pady=(10, 2), sticky="ew")
 
         self.entry_pass = ctk.CTkEntry(
-            self.add_frame, placeholder_text="Password", show="*", width=180
+            self.add_frame, placeholder_text="Password", show="*"
         )
-        self.entry_pass.pack(side="left", padx=5, pady=10, expand=True, fill="x")
-
+        self.entry_pass.grid(row=0, column=1, padx=5, pady=(10, 2), sticky="ew")
         self.entry_pass.bind("<Return>", lambda event: self.handle_password())
 
         self.btn_generate = ctk.CTkButton(
@@ -55,7 +57,7 @@ class dashBoardWindow(ctk.CTk):
             width = 100,
             command=self.generate_secure_password,
         )
-        self.btn_generate.pack(side = "left", padx = 5, pady = 10)
+        self.btn_generate.grid(row=0, column=2, padx=5, pady=(10, 2))
 
         self.btn_add = ctk.CTkButton(
             self.add_frame,
@@ -63,18 +65,18 @@ class dashBoardWindow(ctk.CTk):
             width=100,
             command=self.handle_password,
         )
-        self.btn_add.pack(side="left", padx=5, pady=10)
+        self.btn_add.grid(row=0, column=3, padx=5, pady=(10, 2))
 
         self.security_frame = ctk.CTkFrame(
-            self, fg_color = "transparent"
+            self.add_frame, fg_color = "transparent"
         )
-        self.security_frame.pack(pady = (0,10), padx = 25, fill = "x")
+        self.security_frame.grid(row=1, column=1, padx=5, pady=(0, 10), sticky="w")
 
         self.strength_bar = ctk.CTkProgressBar(
             self.security_frame, height = 8, width = 200
         )
         self.strength_bar.set(0)
-        self.strength_bar.pack(side = "right",padx = (0,10))
+        self.strength_bar.pack(side="left", padx=(0, 5))
         
         self.strength_label = ctk.CTkLabel(
             self.security_frame, text = "" , font = ("Arial",11,"bold")
@@ -208,6 +210,8 @@ class dashBoardWindow(ctk.CTk):
                     self.scrollable_frame, text = "❌", width = 35, command = lambda i = idx: self.delete_password_entry(i-1) 
                 )
                 btn_delete.grid(row = idx, column = 6, padx = 2, pady = 5)
+
+            self.update_idletasks()
     
     def open_edit_dialog(self,item,idx):
         edit_window = ctk.CTkToplevel(self)
@@ -267,7 +271,7 @@ class dashBoardWindow(ctk.CTk):
         self.clear_timer.start()
 
     def clear_clipboard(self):
-        time.sleep(30)
+
         pyperclip.copy("")
         print("Cancellata dalla clipboard")
         self.clear_timer = None
