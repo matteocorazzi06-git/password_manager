@@ -78,3 +78,10 @@ def handle_key(master_password):
         return key_protector.decrypt(encrypted_key)
     except Exception:
         return None
+    
+def setup_master_password(password_input):
+    hashed_password = hashlib.sha256(password_input.encode()).hexdigest()
+    with open("masterpassword.key","w") as outfile:
+        outfile.write(hashed_password)
+
+    return handle_key(password_input)

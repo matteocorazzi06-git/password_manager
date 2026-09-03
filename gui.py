@@ -284,68 +284,93 @@ class loginWindow(ctk.CTk):
         super().__init__()
 
         self.title("Password manager - Login")
-        self.geometry("400x300")
+        self.geometry("400x320")
 
         db.initialize_db()
         self.encrypted_master = self.manage_master_password()
 
+        self.is_first_setup = self.encrypted_master is None
+        text_title = (
+            "Create Master Password"
+            if self.is_first_setup
+            else "Insert Master Password"
+        )
         self.title_label = ctk.CTkLabel(
             self,
-            text = "Insert Password",
+            text = text_title,
             font = ("Arial",18,"bold")
         )
         self.title_label.pack(pady=20)
 
         self.entry_password = ctk.CTkEntry(
-            self, placeholder_text = "Type here...", show = "*",width = 250
+            self, placeholder_text = "Type password...", show = "*",width = 250
         )
         self.entry_password.pack(pady=10)
 
         self.entry_password.bind("<Return>", lambda event: self.verify_login())
 
+        btn_text = ("Create and Log In" if self.is_first_setup else "Log in")
         self.login_button = ctk.CTkButton(
-            self,text = "Log in",command = self.verify_login
+            self,text = btn_text,command = self.verify_login
         )
 
         self.login_button.pack(pady = 10)
 
+        if self.is_first_setup:
+            self.info_label = ctk.CTkLabel(
+                self,
+                text = "Do not forget you password!\nYou will not be able to recover it in any way!",
+                text_color = "orange",
+                font = ("Arial",11),
+            )
+            self.info_label.pack(pady = 5)
+        
+
     def manage_master_password(self):
         key_path = "masterpassword.key"
-        if not os.path.exists(key_path):
-            pass
         if os.path.exists(key_path):
             with open(key_path) as infile:
                 return infile.read()
         return None
     def verify_login(self):
-        password_input = self.entry_password.get()
+        password_input = self.entry_password.get().strip()
 
-        if not self.encrypted_master:
+        if not password_input:
             self.title_label.configure(
-                text="Error: master password is not configured", text_color="red"
+                text="Insert a valid password", text_color="red"
             )
             return
+        
+        if self.is_first_setup:
+            from crypto_utils import setup_master_password
 
-        hashed_input = hashlib.sha256(password_input.encode()).hexdigest()
+            key = setup_master_password(password_input)
+            self.title_label.configure(
+                text = "Created Mater Password", text_color = "green"
+            )
+            self.after(300, lambda:self.open_main_dashboard(key))
 
-        if hashed_input == self.encrypted_master:
-            key = handle_key(password_input)
-            if key is not None:
-                self.title_label.configure(
-                    text="Access granted", text_color="green"
-                )
-                self.after(
-                    300, lambda: self.open_main_dashboard(key)
-                )  
+        else:
+            hashed_input = hashlib.sha256(password_input.encode()).hexdigest()
+
+            if hashed_input == self.encrypted_master:
+                key = handle_key(password_input)
+                if key is not None:
+                    self.title_label.configure(
+                        text="Access granted", text_color="green"
+                    )
+                    self.after(
+                        300, lambda: self.open_main_dashboard(key)
+                    )  
+                else:
+                    self.title_label.configure(
+                        text="Key error", text_color="red"
+                    )
             else:
                 self.title_label.configure(
-                    text="Key error", text_color="red"
+                    text="Incorrect Password. Try again", text_color="red"
                 )
-        else:
-            self.title_label.configure(
-                text="Incorrect Password. Try again", text_color="red"
-            )
-            self.entry_password.delete(0, "end")
+                self.entry_password.delete(0, "end")
 
     def open_main_dashboard(self, key):
             self.withdraw()
