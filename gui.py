@@ -309,6 +309,13 @@ class loginWindow(ctk.CTk):
 
         self.entry_password.bind("<Return>", lambda event: self.verify_login())
 
+        if self.is_first_setup:
+            self.entry_hint = ctk.CTkEntry(
+            self, placeholder_text = "Type hint...", width = 250
+            )
+            self.entry_hint.pack(pady=10)
+
+
         btn_text = ("Create and Log In" if self.is_first_setup else "Log in")
         self.login_button = ctk.CTkButton(
             self,text = btn_text,command = self.verify_login
@@ -344,6 +351,9 @@ class loginWindow(ctk.CTk):
         if self.is_first_setup:
             from crypto_utils import setup_master_password
 
+            with open("hint.txt","w") as outfile:
+                outfile.write(self.entry_hint.get())
+
             key = setup_master_password(password_input)
             self.title_label.configure(
                 text = "Created Mater Password", text_color = "green"
@@ -371,6 +381,12 @@ class loginWindow(ctk.CTk):
                     text="Incorrect Password. Try again", text_color="red"
                 )
                 self.entry_password.delete(0, "end")
+                with open("hint.txt","r") as infile:
+                    hint_text = infile.read() 
+                self.hint_label = ctk.CTkLabel(
+                    self, text = f"Hint for the password: {hint_text}"
+                )
+                self.hint_label.pack(padx = 10)
 
     def open_main_dashboard(self, key):
             self.withdraw()
