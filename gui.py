@@ -284,7 +284,7 @@ class loginWindow(ctk.CTk):
         super().__init__()
 
         self.title("Password manager - Login")
-        self.geometry("400x320")
+        self.geometry("400x400")
 
         db.initialize_db()
         self.encrypted_master = self.manage_master_password()
@@ -302,18 +302,26 @@ class loginWindow(ctk.CTk):
         )
         self.title_label.pack(pady=20)
 
+        self.hint_label = ctk.CTkLabel(
+            self,
+            text = "",
+            text_color = "gray70",
+            font = ("Arial",12,"bold"),
+        )
+        self.hint_label.pack(padx = 10)
+
         self.entry_password = ctk.CTkEntry(
             self, placeholder_text = "Type password...", show = "*",width = 250
         )
-        self.entry_password.pack(pady=10)
+        self.entry_password.pack(pady = 8)
 
         self.entry_password.bind("<Return>", lambda event: self.verify_login())
 
         if self.is_first_setup:
             self.entry_hint = ctk.CTkEntry(
-            self, placeholder_text = "Type hint...", width = 250
+            self, placeholder_text = "Type hint...(optional)", width = 250
             )
-            self.entry_hint.pack(pady=10)
+            self.entry_hint.pack(pady = 8)
 
 
         btn_text = ("Create and Log In" if self.is_first_setup else "Log in")
@@ -321,7 +329,7 @@ class loginWindow(ctk.CTk):
             self,text = btn_text,command = self.verify_login
         )
 
-        self.login_button.pack(pady = 10)
+        self.login_button.pack(pady = (12,10))
 
         if self.is_first_setup:
             self.info_label = ctk.CTkLabel(
@@ -330,7 +338,7 @@ class loginWindow(ctk.CTk):
                 text_color = "orange",
                 font = ("Arial",11),
             )
-            self.info_label.pack(pady = 5)
+            self.info_label.pack(pady = (10,0))
         
 
     def manage_master_password(self):
@@ -381,12 +389,14 @@ class loginWindow(ctk.CTk):
                     text="Incorrect Password. Try again", text_color="red"
                 )
                 self.entry_password.delete(0, "end")
-                with open("hint.txt","r") as infile:
-                    hint_text = infile.read() 
-                self.hint_label = ctk.CTkLabel(
-                    self, text = f"Hint for the password: {hint_text}"
-                )
-                self.hint_label.pack(padx = 10)
+                if os.path.exists("hint.txt"):
+                    with open("hint.txt","r") as infile:
+                        hint_text = infile.read() 
+                    if hint_text:
+                        self.hint_label.configure(
+                            text = f"Hint for the password: {hint_text}"
+                        )
+                    self.hint_label.pack(pady = 5)
 
     def open_main_dashboard(self, key):
             self.withdraw()
