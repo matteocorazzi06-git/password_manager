@@ -19,6 +19,7 @@ class dashBoardWindow(ctk.CTk):
         self.title("Dashboard") 
         self.clear_timer = None 
 
+        #Frame principale con titolo
         self.title_label = ctk.CTkLabel(
             self, text = "Your passwords", font = ("Arial",20,"bold")
         )
@@ -34,6 +35,7 @@ class dashBoardWindow(ctk.CTk):
         )
         self.export_btn.pack(pady = (0,10))
 
+        #Frame per la sola aggiunta password
         self.add_frame = ctk.CTkFrame(self)
         self.add_frame.pack(pady=10, padx=20, fill="x")
 
@@ -93,6 +95,7 @@ class dashBoardWindow(ctk.CTk):
         self.entry_search.pack(padx = 25, pady = (0,10), fill= "x")
         self.entry_search.bind("<KeyRelease>", lambda event: self.load_passwords() )   
 
+        #Frame che può essere scrollato in base alle password che ci stanno
         self.scrollable_frame = ctk.CTkScrollableFrame(
             self, width = 750, height = 450
         )
@@ -176,7 +179,7 @@ class dashBoardWindow(ctk.CTk):
             ).grid(row=0, column=4, padx=10, pady=(5, 10), sticky="ew")
 
             for idx, item in enumerate(passwords, start=1):
-                # Colonna 0: Username
+                
                 ctk.CTkLabel(
                     self.scrollable_frame, text=item["username"], anchor="w"
                 ).grid(row=idx, column=0, padx=10, pady=5, sticky="ew")
@@ -217,7 +220,7 @@ class dashBoardWindow(ctk.CTk):
     def open_edit_dialog(self,item,idx):
         edit_window = ctk.CTkToplevel(self)
         edit_window.title("Modifica credenziali")
-        edit_window.geometry("350x250")
+        edit_window.geometry("350x300")
         edit_window.grab_set()
 
         ctk.CTkLabel(edit_window, text="Nuovo Username:").pack(pady=(15, 5))
@@ -236,8 +239,12 @@ class dashBoardWindow(ctk.CTk):
                 db.update_password(idx, new_user, new_pwd, self.key)
                 edit_window.destroy()
                 self.load_passwords()
+        def cancel_changes():
+            edit_window.destroy()
         save = ctk.CTkButton(edit_window, text = "Save changes", command = save_changes)
-        save.pack(pady = 20)
+        save.pack(pady = (15,5))
+        cancel = ctk.CTkButton(edit_window, text = "Cancel",command = cancel_changes)
+        cancel.pack(pady = (0,15))
 
     def delete_password_entry(self,idx):
         db.delete_password_index(idx)
