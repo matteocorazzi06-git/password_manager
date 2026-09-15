@@ -217,7 +217,7 @@ class dashBoardWindow(ctk.CTk):
     def open_edit_dialog(self,item,idx):
         edit_window = ctk.CTkToplevel(self)
         edit_window.title("Modifica credenziali")
-        edit_window.geometry("350x250")
+        edit_window.geometry("350x300")
         edit_window.grab_set()
 
         ctk.CTkLabel(edit_window, text="Nuovo Username:").pack(pady=(15, 5))
@@ -236,8 +236,12 @@ class dashBoardWindow(ctk.CTk):
                 db.update_password(idx, new_user, new_pwd, self.key)
                 edit_window.destroy()
                 self.load_passwords()
+        def cancel_changes():
+            edit_window.destroy()
         save = ctk.CTkButton(edit_window, text = "Save changes", command = save_changes)
-        save.pack(pady = 20)
+        save.pack(pady = (15,5))
+        cancel = ctk.CTkButton(edit_window, text = "Cancel",command = cancel_changes)
+        cancel.pack(pady = (0,15))
 
     def delete_password_entry(self,idx):
         db.delete_password_index(idx)
