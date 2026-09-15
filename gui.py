@@ -284,7 +284,7 @@ class loginWindow(ctk.CTk):
         super().__init__()
 
         self.title("Password manager - Login")
-        self.geometry("400x400")
+        self.geometry("400x380")
 
         db.initialize_db()
         self.encrypted_master = self.manage_master_password()
