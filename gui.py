@@ -11,13 +11,29 @@ from tkinter import filedialog
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
-class dashBoardWindow(ctk.CTk):
-    def __init__(self,key):
-        super().__init__()
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR,"data")
+MASTER_PASSWORD_FILE = os.path.join(DATA_DIR,"masterpassword.key")
+HINT_FILE = os.path.join(DATA_DIR,"hint.txt")
+
+print("CTkToplevel:", ctk.CTkToplevel)
+print("CTk:", ctk.CTk)
+
+class dashBoardWindow(ctk.CTkToplevel):
+    def __init__(self, parent, key):
+        #debug per far sì che la finestra si chiuda con unico mainloop e parent
+        print("CREATE DASHBOARD")
+        print("CLASS:", type(self))
+        print("PARENT:", type(parent))
+
+        super().__init__(parent)
+
         self.key = key
         self.geometry("900x850")
-        self.title("Dashboard") 
-        self.clear_timer = None 
+        self.title("Dashboard")
+        self.clear_timer = None
+
+        self.protocol("WM_DELETE_WINDOW", self.close_app)
 
         #Frame principale con titolo
         self.title_label = ctk.CTkLabel(
@@ -285,6 +301,14 @@ class dashBoardWindow(ctk.CTk):
         print("Cancellata dalla clipboard")
         self.clear_timer = None
 
+    def close_app(self):
+        if self.clear_timer:
+            self.clear_timer.cancel()
+            self.clear_timer = None
+
+        self.destroy()
+        self.master.destroy()
+
 class loginWindow(ctk.CTk):
 
     def __init__(self):
@@ -349,7 +373,7 @@ class loginWindow(ctk.CTk):
         
 
     def manage_master_password(self):
-        key_path = "masterpassword.key"
+        key_path = MASTER_PASSWORD_FILE
         if os.path.exists(key_path):
             with open(key_path) as infile:
                 return infile.read()
@@ -366,7 +390,7 @@ class loginWindow(ctk.CTk):
         if self.is_first_setup:
             from crypto_utils import setup_master_password
 
-            with open("hint.txt","w") as outfile:
+            with open(HINT_FILE,"w") as outfile:
                 outfile.write(self.entry_hint.get())
 
             key = setup_master_password(password_input)
@@ -408,8 +432,8 @@ class loginWindow(ctk.CTk):
     def open_main_dashboard(self, key):
             self.withdraw()
             print(f"Access granted")
-            dashboard = dashBoardWindow(key)
-            dashboard.mainloop()
+            self.dashboard = dashBoardWindow(self,key)
+            
 
 if __name__ == "__main__":
     app = loginWindow()

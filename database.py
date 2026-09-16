@@ -4,9 +4,13 @@ import os
 import shutil
 from crypto_utils import decrypt_message, encrypt_message
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+PSW_FILE = os.path.join(DATA_DIR, "passwords.csv")
+
 def export_csv_backup(destination_path):
-    if os.path.exists("passwords.csv"):
-        shutil.copy("passwords.csv",destination_path)
+    if os.path.exists(PSW_FILE):
+        shutil.copy(PSW_FILE,destination_path)
         return True
     return False 
 
@@ -24,8 +28,8 @@ def is_valid_date(date_string):
 
 
 def initialize_db():
-    file_exists = os.path.exists("passwords.csv")
-    with open("passwords.csv", "a", newline="") as outfile:
+    file_exists = os.path.exists(PSW_FILE)
+    with open(PSW_FILE, "a", newline="") as outfile:
         writer = csv.DictWriter(
             outfile, fieldnames=["username", "password", "date"]
         )
@@ -34,7 +38,7 @@ def initialize_db():
 
 
 def add_password(username, password, key):
-    with open("passwords.csv", "a", newline="") as outfile:
+    with open(PSW_FILE, "a", newline="") as outfile:
         encrypted_pwd = encrypt_message(password, key).decode()
         writer = csv.DictWriter(
             outfile, fieldnames=["username", "password", "date"]
@@ -50,10 +54,10 @@ def add_password(username, password, key):
 
 def get_all_passwords(key):
     results = []
-    if not os.path.exists("passwords.csv"):
+    if not os.path.exists(PSW_FILE):
         return results
 
-    with open("passwords.csv", "r") as infile:
+    with open(PSW_FILE, "r") as infile:
         reader = csv.DictReader(infile)
         for entry in reader:
             decrypted_pwd = decrypt_message(entry["password"], key)
@@ -71,7 +75,7 @@ def get_all_passwords(key):
 def update_password(target_index, new_username, new_password, key):
     rows = []
     target_index -=1
-    with open("passwords.csv", "r") as infile:
+    with open(PSW_FILE, "r") as infile:
         reader = csv.DictReader(infile)
         for idx,entry in enumerate(reader):
             if idx == target_index:
@@ -80,7 +84,7 @@ def update_password(target_index, new_username, new_password, key):
                 entry["date"] = get_current_date()
             rows.append(entry)
 
-    with open("passwords.csv", "w", newline="") as outfile:
+    with open(PSW_FILE, "w", newline="") as outfile:
         writer = csv.DictWriter(
             outfile, fieldnames=["username", "password", "date"]
         )
@@ -92,7 +96,7 @@ def delete_password(username):
     rows = []
     found = False
 
-    with open("passwords.csv", "r") as infile:
+    with open(PSW_FILE, "r") as infile:
         reader = csv.DictReader(infile)
         for entry in reader:
             if entry["username"].lower() == username.lower():
@@ -101,7 +105,7 @@ def delete_password(username):
                 rows.append(entry)
 
     if found:
-        with open("passwords.csv", "w", newline="") as outfile:
+        with open(PSW_FILE, "w", newline="") as outfile:
             writer = csv.DictWriter(
                 outfile, fieldnames=["username", "password", "date"]
             )
@@ -113,13 +117,13 @@ def delete_password(username):
 def delete_password_index(target_index):
     rows = []
 
-    with open("passwords.csv", "r") as infile:
+    with open(PSW_FILE, "r") as infile:
         reader = csv.DictReader(infile)
         for (index,entry) in enumerate(reader):
             if index != target_index:
                 rows.append(entry)
 
-    with open("passwords.csv", "w", newline="") as outfile:
+    with open(PSW_FILE, "w", newline="") as outfile:
         writer = csv.DictWriter(
             outfile, fieldnames=["username", "password", "date"]
         )

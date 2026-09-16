@@ -6,6 +6,12 @@ import string
 from cryptography.fernet import Fernet
 import re
 
+DIR_BASE = os.path.dirname(os.path.abspath(__file__))
+DIR_DATA = os.path.join(DIR_BASE, "data")
+FILE_KEY = os.path.join(DIR_DATA,"key.key")
+MASTER_PASSWORD_FILE = os.path.join(DIR_DATA,"masterpassword.key")
+
+
 def check_strength(password):
     if not password:
         return 0.0,"Gray",""
@@ -65,13 +71,13 @@ def handle_key(master_password):
     master_hash = hashlib.sha256(master_password.encode()).digest()
     key_protector = Fernet(base64.urlsafe_b64encode(master_hash))
 
-    if not os.path.exists("key.key"):
+    if not os.path.exists(FILE_KEY):
         raw_key = Fernet.generate_key()
         encrypted_key = key_protector.encrypt(raw_key)
-        with open("key.key", "wb") as key_file:
+        with open(FILE_KEY, "wb") as key_file:
             key_file.write(encrypted_key)
 
-    with open("key.key", "rb") as key_file:
+    with open(FILE_KEY, "rb") as key_file:
         encrypted_key = key_file.read()
 
     try:
@@ -81,7 +87,7 @@ def handle_key(master_password):
     
 def setup_master_password(password_input):
     hashed_password = hashlib.sha256(password_input.encode()).hexdigest()
-    with open("masterpassword.key","w") as outfile:
+    with open(MASTER_PASSWORD_FILE,"w") as outfile:
         outfile.write(hashed_password)
 
     return handle_key(password_input)
