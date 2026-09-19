@@ -1,9 +1,19 @@
-# File di dati sensibili
-passwords.csv
-chiave.key
-masterpassword.key
+# File di dati sensibili. Ignorata la cartella /data
+data/
+hint.txt
+
+#Controllo per file futuri
+*.key
+*.csv
 
 # File temporanei di Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+#File di sistema
 .DS_Store
+Thumbs.db
+.vscode/
+.idea/
