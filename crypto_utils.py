@@ -6,11 +6,7 @@ import string
 from cryptography.fernet import Fernet
 import re
 
-DIR_BASE = os.path.dirname(os.path.abspath(__file__))
-DIR_DATA = os.path.join(DIR_BASE, "data")
-FILE_KEY = os.path.join(DIR_DATA,"key.key")
-MASTER_PASSWORD_FILE = os.path.join(DIR_DATA,"masterpassword.key")
-
+from config import FILE_KEY, MASTER_PASSWORD_FILE
 
 def check_strength(password):
     if not password:

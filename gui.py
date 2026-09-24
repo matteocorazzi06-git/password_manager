@@ -11,10 +11,7 @@ from tkinter import filedialog
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR,"data")
-MASTER_PASSWORD_FILE = os.path.join(DATA_DIR,"masterpassword.key")
-HINT_FILE = os.path.join(DATA_DIR,"hint.txt")
+from config import MASTER_PASSWORD_FILE, HINT_FILE
 
 print("CTkToplevel:", ctk.CTkToplevel)
 print("CTk:", ctk.CTk)
@@ -420,8 +417,8 @@ class loginWindow(ctk.CTk):
                     text="Incorrect Password. Try again", text_color="red"
                 )
                 self.entry_password.delete(0, "end")
-                if os.path.exists("hint.txt"):
-                    with open("hint.txt","r") as infile:
+                if os.path.exists(HINT_FILE):
+                    with open(HINT_FILE,"r") as infile:
                         hint_text = infile.read() 
                     if hint_text:
                         self.hint_label.configure(

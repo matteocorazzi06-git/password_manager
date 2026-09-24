@@ -4,9 +4,7 @@ import os
 import shutil
 from crypto_utils import decrypt_message, encrypt_message
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-PSW_FILE = os.path.join(DATA_DIR, "passwords.csv")
+from config import PSW_FILE
 
 def export_csv_backup(destination_path):
     if os.path.exists(PSW_FILE):
