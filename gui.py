@@ -191,7 +191,7 @@ class dashBoardWindow(ctk.CTkToplevel):
                 self.scrollable_frame, text="Date", font=("Arial", 12, "bold"), anchor="center"
             ).grid(row=0, column=4, padx=10, pady=(5, 10), sticky="ew")
 
-            for idx, item in enumerate(passwords, start=1):
+            for idx, item in enumerate(passwords, start = 1):
                 
                 ctk.CTkLabel(
                     self.scrollable_frame, text=item["username"], anchor="w"
@@ -218,13 +218,13 @@ class dashBoardWindow(ctk.CTkToplevel):
                 )
                 btn_clipboard.grid(row = idx, column = 3, padx = 2, pady = 5)
                 btn_edit = ctk.CTkButton(
-                    self.scrollable_frame, text = "✏️", width = 35, command = lambda item = item, idx = idx: self.open_edit_dialog(item,idx)
+                    self.scrollable_frame, text = "✏️", width = 35, command = lambda item = item, i = idx-1: self.open_edit_dialog(item,i)
             
                 )
                 btn_edit.grid(row = idx,column = 5,padx = 2, pady = 5)
 
                 btn_delete = ctk.CTkButton(
-                    self.scrollable_frame, text = "❌", width = 35, command = lambda i = idx: self.delete_password_entry(i-1) 
+                    self.scrollable_frame, text = "❌", width = 35, command = lambda i = idx-1: self.delete_password_entry(i) 
                 )
                 btn_delete.grid(row = idx, column = 6, padx = 2, pady = 5)
 
