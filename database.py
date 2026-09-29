@@ -73,19 +73,20 @@ def update_password(target_index, new_username, new_password, key):
     rows = []
     with open(PSW_FILE, "r", encoding="utf-8") as infile:
         reader = list(csv.DictReader(infile))
-        for idx,entry in enumerate(reader):
-            if idx == target_index:
-                entry["username"] = new_username
-                entry["password"] = encrypt_message(new_password, key).decode()
-                entry["date"] = get_current_date()
-            rows.append(entry)
+        if 0<= target_index < len(reader):
+            for idx,entry in enumerate(reader):
+                if idx == target_index:
+                    entry["username"] = new_username
+                    entry["password"] = encrypt_message(new_password, key).decode()
+                    entry["date"] = get_current_date()
+                rows.append(entry)
 
-    with open(PSW_FILE, "w", newline="",encoding="utf-8") as outfile:
-        writer = csv.DictWriter(
-            outfile, fieldnames=["username", "password", "date"]
-        )
-        writer.writeheader()
-        writer.writerows(rows)
+        with open(PSW_FILE, "w", newline="",encoding="utf-8") as outfile:
+            writer = csv.DictWriter(
+                outfile, fieldnames=["username", "password", "date"]
+            )
+            writer.writeheader()
+            writer.writerows(rows)
 
 def delete_password_index(target_index):
     if not os.path.exists(PSW_FILE):
@@ -93,14 +94,13 @@ def delete_password_index(target_index):
     rows = []
 
     with open(PSW_FILE, "r",encoding="utf-8") as infile:
-        reader = csv.DictReader(infile)
-        for (index,entry) in enumerate(reader):
-            if index != target_index:
-                rows.append(entry)
+        reader = list(csv.DictReader(infile))
+        if 0<= target_index < len(reader):
+            rows = [entry for (index,entry) in enumerate(reader) if index != target_index]
 
-    with open(PSW_FILE, "w", newline="",encoding="utf-8") as outfile:
-        writer = csv.DictWriter(
-            outfile, fieldnames=["username", "password", "date"]
-        )
-        writer.writeheader()
-        writer.writerows(rows)
+        with open(PSW_FILE, "w", newline="",encoding="utf-8") as outfile:
+            writer = csv.DictWriter(
+                outfile, fieldnames=["username", "password", "date"]
+            )
+            writer.writeheader()
+            writer.writerows(rows)
