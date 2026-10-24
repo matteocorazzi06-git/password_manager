@@ -1,27 +1,23 @@
+import time
+
 import hashlib
 import os
 import customtkinter as ctk
 from crypto_utils import handle_key,generate_password,check_strength
 import database as db
 import pyperclip
-import time 
-import threading 
 from tkinter import filedialog 
+import sys 
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
 from config import MASTER_PASSWORD_FILE, HINT_FILE
 
-print("CTkToplevel:", ctk.CTkToplevel)
-print("CTk:", ctk.CTk)
 
 class dashBoardWindow(ctk.CTkToplevel):
     def __init__(self, parent, key):
         #debug per far sì che la finestra si chiuda con unico mainloop e parent
-        print("CREATE DASHBOARD")
-        print("CLASS:", type(self))
-        print("PARENT:", type(parent))
 
         super().__init__(parent)
 
@@ -47,6 +43,11 @@ class dashBoardWindow(ctk.CTkToplevel):
             command = self.export_backup,
         )
         self.export_btn.pack(pady = (0,10))
+
+        self.status_label = ctk.CTkLabel(
+            self,text = "", font = ("Arial",11,"bold")
+        )
+        self.status_label.pack(pady = (0,5))
 
         #Frame per la sola aggiunta password
         self.add_frame = ctk.CTkFrame(self)
@@ -106,7 +107,12 @@ class dashBoardWindow(ctk.CTkToplevel):
             self, placeholder_text= "Search by username...🔎"
         )
         self.entry_search.pack(padx = 25, pady = (0,10), fill= "x")
-        self.entry_search.bind("<KeyRelease>", lambda event: self.load_passwords() )   
+        self._search_after_id = None
+
+        self.entry_search.bind(
+            "<KeyRelease>",
+            self.schedule_password_reload
+        )
 
         #Frame che può essere scrollato in base alle password che ci stanno
         self.scrollable_frame = ctk.CTkScrollableFrame(
@@ -116,6 +122,12 @@ class dashBoardWindow(ctk.CTkToplevel):
         self.scrollable_frame.pack(pady = 10, padx = 10,fill = "both",expand = True)
 
         self.load_passwords()
+
+
+    def show_status(self,message, is_error = False):
+        color = "#e74c3c" if is_error else "#2ecc71"
+        self.status_label.configure(text = message,text_color = color)
+
 
     def update_strength_meter(self):
         pwd = self.entry_pass.get()
@@ -134,7 +146,11 @@ class dashBoardWindow(ctk.CTkToplevel):
 
         )
         if file_path:
-            db.export_csv_backup(file_path)
+            success= db.export_csv_backup(file_path)
+            if success:
+                self.show_status("backup successfully exported")
+            else:
+                self.show_status("Error exporting backup")
 
     def generate_secure_password(self):
         password = generate_password()
@@ -144,7 +160,15 @@ class dashBoardWindow(ctk.CTkToplevel):
         self.entry_pass.configure(show = "*")
         self.update_strength_meter()
 
+    def schedule_password_reload(self,event=None):
+        if self._search_after_id is not None:
+            try:
+                self.after_cancel(self._search_after_id)
+            except Exception:
+                pass
+        self._search_after_id = self.after(250, self.load_passwords)
     def load_passwords(self):
+            self._search_after_id = None
             for widget in self.scrollable_frame.winfo_children():
                 widget.destroy()
 
@@ -224,7 +248,7 @@ class dashBoardWindow(ctk.CTkToplevel):
                 btn_edit.grid(row = idx,column = 5,padx = 2, pady = 5)
 
                 btn_delete = ctk.CTkButton(
-                    self.scrollable_frame, text = "❌", width = 35, command = lambda i = idx-1: self.delete_password_entry(i) 
+                    self.scrollable_frame, text = "❌", width = 35, command = lambda i = idx-1: self.confirm_delete_dialog(i) 
                 )
                 btn_delete.grid(row = idx, column = 6, padx = 2, pady = 5)
 
@@ -245,13 +269,26 @@ class dashBoardWindow(ctk.CTkToplevel):
         entry_pass = ctk.CTkEntry(edit_window, width=220)
         entry_pass.insert(0, item["password"])
         entry_pass.pack(pady=5)
+
+        err_label = ctk.CTkLabel(
+            edit_window, text = "", text_color ="#e74c3c", font =("Arial",11)
+        )
+        err_label.pack(pady = 2)
+
         def save_changes():
             new_user = entry_user.get().strip()
             new_pwd = entry_pass.get().strip()
+
+            if not new_user or not new_pwd:
+                err_label.configure(text = "All fields are neccessary")
+                return 
             if new_user and new_pwd:
-                db.update_password(idx, new_user, new_pwd, self.key)
-                edit_window.destroy()
-                self.load_passwords()
+                if db.update_password(idx, new_user, new_pwd, self.key):
+                    edit_window.destroy()
+                    self.load_passwords()
+                    self.show_status("Credentials succesfully updated",is_error = False)
+                else:
+                    err_label.configure(text = "Error editing fields")
         def cancel_changes():
             edit_window.destroy()
         save = ctk.CTkButton(edit_window, text = "Save changes", command = save_changes)
@@ -259,22 +296,69 @@ class dashBoardWindow(ctk.CTkToplevel):
         cancel = ctk.CTkButton(edit_window, text = "Cancel",command = cancel_changes)
         cancel.pack(pady = (0,15))
 
-    def delete_password_entry(self,idx):
-        db.delete_password_index(idx)
-        self.load_passwords()
+    def confirm_delete_dialog(self,idx):
+        delete_window = ctk.CTkToplevel(self)
+        delete_window.title("Confirm deletion")
+        delete_window.geometry("320x180")
+        delete_window.grab_set()
+
+        ctk.CTkLabel(
+            delete_window,
+            text = "Confirm deletion of this password?",
+            font = ("Arial",13,"bold")
+        ).pack(pady=(20,15))
+        btn_frame = ctk.CTkFrame(delete_window, fg_color = "transparent")
+        btn_frame.pack(pady = 10)
+
+        def delete_password_entry():
+            if db.delete_password_index(idx):
+                delete_window.destroy()
+                self.load_passwords()
+                self.show_status("Deleted password",is_error = False)
+            else:
+                delete_window.destroy()
+                self.show_status("Error occurred during deletion",is_error = True)
+
+        btn_confirm = ctk.CTkButton(
+            btn_frame,
+            text="Delete",
+            fg_color="#c0392b",
+            hover_color="#e74c3c",
+            width=100,
+            command=delete_password_entry,
+        )
+        btn_confirm.pack(side="left", padx=10)
+
+        btn_cancel = ctk.CTkButton(
+            btn_frame,
+            text="Cancel",
+            fg_color="#7f8c8d",
+            hover_color="#95a5a6",
+            width=100,
+            command=delete_window.destroy,
+        )
+        btn_cancel.pack(side="right", padx=10)
+
 
     def handle_password(self):
 
         user = self.entry_user.get().strip()
         pwd = self.entry_pass.get().strip()
 
-        if user and pwd:
-            db.add_password(user,pwd,self.key)
+        if not user or not pwd:
+            self.show_status("Insert both username and password",is_error = True)
+            return
 
-            self.entry_user.delete(0, "end")
-            self.entry_pass.delete(0, "end")
-            self.update_strength_meter()
-            self.load_passwords()
+        if user and pwd:
+            if db.add_password(user,pwd,self.key):
+
+                self.entry_user.delete(0, "end")
+                self.entry_pass.delete(0, "end")
+                self.update_strength_meter()
+                self.load_passwords()
+                self.show_status("Password addedd succesfully",is_error = False)
+            else:
+                self.show_status("Error saving password",is_error = True)
 
 
     def toggle_password(self,entry_widget):
@@ -283,39 +367,71 @@ class dashBoardWindow(ctk.CTkToplevel):
         else:
             entry_widget.configure(show = "*")
 
-    def copy_to_clipboard(self,password):
+    def copy_to_clipboard(self, password):
         pyperclip.copy(password)
-        print("La password sarà cancellata dalla clipboard tra 30 secondi dalla clipboard")
-        if self.clear_timer:
-            self.clear_timer.cancel()
-        self.clear_timer = threading.Timer(30, self.clear_clipboard)
-        self.clear_timer.daemon = True
-        self.clear_timer.start()
+
+        self.show_status(
+            "Password copied successfully. "
+            "Deletion from clipboard in 30 seconds",
+            is_error=False
+        )
+        if self.clear_timer is not None:
+            try:
+                self.after_cancel(self.clear_timer)
+            except Exception:
+                pass
+
+        self.clear_timer = self.after(
+            30_000,
+            self.clear_clipboard
+        )
+
 
     def clear_clipboard(self):
-
-        pyperclip.copy("")
-        print("Cancellata dalla clipboard")
         self.clear_timer = None
 
+        try:
+            pyperclip.copy("")
+
+            if self.winfo_exists():
+                self.show_status(
+                    "Clipboard was emptied",
+                    is_error=False
+                )
+        except Exception:
+            pass
+
+
     def close_app(self):
-        if self.clear_timer:
-            self.clear_timer.cancel()
+        if self.clear_timer is not None:
+            try:
+                self.after_cancel(self.clear_timer)
+            except Exception:
+                pass
+
             self.clear_timer = None
 
-        self.destroy()
-        self.master.destroy()
+        if self.master and self.master.winfo_exists():
+            self.master.destroy()
+        else:
+            self.destroy()
+
 
 class loginWindow(ctk.CTk):
 
     def __init__(self):
         super().__init__()
 
+        self._dashboard_opening = False
+
         self.title("Password manager - Login")
         self.geometry("400x380")
 
+        self.protocol("WM_DELETE_WINDOW",self.close_login)
+
         db.initialize_db()
         self.encrypted_master = self.manage_master_password()
+
 
         self.is_first_setup = self.encrypted_master is None
         text_title = (
@@ -350,6 +466,7 @@ class loginWindow(ctk.CTk):
             self, placeholder_text = "Type hint...(optional)", width = 250
             )
             self.entry_hint.pack(pady = 8)
+            self.entry_hint.bind("<Return>", lambda event: self.verify_login())
 
 
         btn_text = ("Create and Log In" if self.is_first_setup else "Log in")
@@ -372,10 +489,12 @@ class loginWindow(ctk.CTk):
     def manage_master_password(self):
         key_path = MASTER_PASSWORD_FILE
         if os.path.exists(key_path):
-            with open(key_path) as infile:
+            with open(key_path,"r",encoding="utf-8") as infile:
                 return infile.read()
-        return None
+        return None 
     def verify_login(self):
+        if self._dashboard_opening:
+            return
         password_input = self.entry_password.get().strip()
 
         if not password_input:
@@ -387,14 +506,14 @@ class loginWindow(ctk.CTk):
         if self.is_first_setup:
             from crypto_utils import setup_master_password
 
-            with open(HINT_FILE,"w") as outfile:
+            with open(HINT_FILE,"w",encoding = "utf-8") as outfile:
                 outfile.write(self.entry_hint.get())
 
             key = setup_master_password(password_input)
             self.title_label.configure(
                 text = "Created Mater Password", text_color = "green"
             )
-            self.after(300, lambda:self.open_main_dashboard(key))
+            self._schedule_dashboard_open(key)
 
         else:
             hashed_input = hashlib.sha256(password_input.encode()).hexdigest()
@@ -405,9 +524,7 @@ class loginWindow(ctk.CTk):
                     self.title_label.configure(
                         text="Access granted", text_color="green"
                     )
-                    self.after(
-                        300, lambda: self.open_main_dashboard(key)
-                    )  
+                    self._schedule_dashboard_open(key)
                 else:
                     self.title_label.configure(
                         text="Key error", text_color="red"
@@ -418,20 +535,45 @@ class loginWindow(ctk.CTk):
                 )
                 self.entry_password.delete(0, "end")
                 if os.path.exists(HINT_FILE):
-                    with open(HINT_FILE,"r") as infile:
+                    with open(HINT_FILE,"r",encoding="utf-8") as infile:
                         hint_text = infile.read() 
                     if hint_text:
                         self.hint_label.configure(
                             text = f"Hint for the password: {hint_text}"
                         )
                     self.hint_label.pack(pady = 5)
+    def close_login(self):
+        self.quit()
+        self.destroy()
+        sys.exit(0)
+
+    def _schedule_dashboard_open(self,key):
+        if self._dashboard_opening:
+            return
+        self._dashboard_opening = True
+        self.login_button.configure(state = "disabled")
+        self.entry_password.configure(state = "disabled")
+
+        if hasattr(self,"entry_hint"):
+            self.entry_hint.configure(state = "disabled")
+
+        self.after(
+            300,
+            lambda: self.open_main_dashboard(key)
+        )
 
     def open_main_dashboard(self, key):
             self.withdraw()
-            print(f"Access granted")
             self.dashboard = dashBoardWindow(self,key)
             
 
+#if __name__ == "__main__":
+#    app = loginWindow()
+#    app.mainloop()
+
 if __name__ == "__main__":
+    _t_gui = time.perf_counter()
     app = loginWindow()
+
+
     app.mainloop()
